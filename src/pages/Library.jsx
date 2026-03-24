@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { getCover } from '../lib/covers'
 
 function cleanTitle(title) {
   if (!title) return ''
@@ -113,8 +114,26 @@ export default function Library() {
         continue
       }
       const { data: { publicUrl } } = supabase.storage.from('songs').getPublicUrl(fileName)
+
+      // Upload cover art if exists
+      let coverPublicUrl = null
+      if (song.coverUrl) {
+        try {
+          const coverResp = await fetch(song.coverUrl)
+          const coverBlob = await coverResp.blob()
+          const coverExt = coverBlob.type.split('/')[1] || 'jpg'
+          const coverPath = `${user.id}/${Date.now()}_${i}_cover.${coverExt}`
+          const { error: covErr } = await supabase.storage.from('covers').upload(coverPath, coverBlob)
+          if (!covErr) {
+            const { data: { publicUrl: covUrl } } = supabase.storage.from('covers').getPublicUrl(coverPath)
+            coverPublicUrl = covUrl
+          }
+        } catch { /* cover upload failed, continue without */ }
+      }
+
       const { error: dbErr } = await supabase.from('songs').insert({
-        user_id: user.id, title: song.title, artist: song.artist, file_url: publicUrl
+        user_id: user.id, title: song.title, artist: song.artist,
+        file_url: publicUrl, cover_url: coverPublicUrl
       })
       if (dbErr) {
         console.error('DB insert error:', dbErr.message)
@@ -322,7 +341,13 @@ export default function Library() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.03 }}
                 >
-                  <div className="song-thumb-placeholder">♪</div>
+                  <img
+                    src={getCover(song)}
+                    className="song-thumb cover-img"
+                    alt=""
+                    style={{ width: '40px', height: '40px', flexShrink: 0 }}
+                    onError={e => { e.target.style.display = 'none' }}
+                  />
                   <div className="song-item-info">
                     <span className="song-item-title">{cleanTitle(song.title)}</span>
                     <span className="song-item-artist">{song.artist || 'Artista desconocido'}</span>

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { usePlayerAll } from '../context/PlayerContext'
+import { getCover } from '../lib/covers'
 
 function formatTime(secs) {
   if (!secs || isNaN(secs)) return '--:--'
@@ -14,7 +15,6 @@ function formatTime(secs) {
 
 function cleanTitle(title) {
   if (!title) return ''
-  // Remove parenthesized groups that reference codec/quality info
   return title
     .replace(/\(MP3[^)]*\)/gi, '')
     .replace(/_+/g, ' ')
@@ -39,6 +39,24 @@ function KeyboardNotification({ message }) {
   )
 }
 
+function StarRating({ rating, onRate }) {
+  const [hovered, setHovered] = useState(0)
+  return (
+    <div className="star-rating">
+      {[1, 2, 3, 4, 5].map(n => (
+        <button
+          key={n}
+          className={`star-btn ${(hovered || rating) >= n ? 'star-filled' : ''}`}
+          onMouseEnter={() => setHovered(n)}
+          onMouseLeave={() => setHovered(0)}
+          onClick={() => onRate(n)}
+          aria-label={`${n} estrellas`}
+        >★</button>
+      ))}
+    </div>
+  )
+}
+
 export default function Player() {
   const [shuffle, setShuffle] = useState(false)
   const [repeat, setRepeat] = useState(false)
@@ -51,10 +69,18 @@ export default function Player() {
   const [editArtist, setEditArtist] = useState('')
   const [kbNote, setKbNote] = useState('')
 
+  // ── Rating state ─────────────────────────────────────────
+  const [myRating, setMyRating] = useState(0)
+  const [myReview, setMyReview] = useState('')
+  const [savingRating, setSavingRating] = useState(false)
+  const [ratingMsg, setRatingMsg] = useState('')
+  const [avgRating, setAvgRating] = useState(null)
+  const [ratingCount, setRatingCount] = useState(0)
+
   const { user } = useAuth()
   const { songs, setSongs, currentIndex, playing, progress, duration, volume, toggle, next, prev, seek, changeVolume, playSong, current } = usePlayerAll()
 
-  // ── Fetch songs ─────────────────────────────────────────────────
+  // ── Fetch songs ─────────────────────────────────────────
   useEffect(() => {
     const fetchSongs = async () => {
       const { data } = await supabase.from('songs').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
@@ -63,7 +89,7 @@ export default function Player() {
     fetchSongs()
   }, [user.id])
 
-  // ── Load durations lazily — 3 at a time to avoid hammering CDN ──
+  // ── Load durations lazily ────────────────────────────────
   const loadingRef = useRef(new Set())
   useEffect(() => {
     if (!songs.length) return
@@ -76,19 +102,62 @@ export default function Player() {
       audio.addEventListener('loadedmetadata', () => {
         setDurations(prev => ({ ...prev, [song.id]: audio.duration }))
         loadingRef.current.delete(song.id)
-        audio.src = '' // release network resource
+        audio.src = ''
       }, { once: true })
       audio.src = song.file_url
     })
   }, [songs, durations])
 
-  // ── Fetch playlists ─────────────────────────────────────────────
+  // ── Fetch playlists ──────────────────────────────────────
   useEffect(() => {
     supabase.from('playlists').select('*').eq('user_id', user.id)
       .then(({ data }) => setPlaylists(data || []))
   }, [user.id])
 
-  // ── Keyboard shortcuts ──────────────────────────────────────────
+  // ── Load rating when song changes ────────────────────────
+  useEffect(() => {
+    if (!current) { setMyRating(0); setMyReview(''); setAvgRating(null); setRatingCount(0); return }
+    setMyRating(0); setMyReview(''); setRatingMsg('')
+
+    // My rating
+    supabase.from('song_ratings').select('rating, review')
+      .eq('user_id', user.id).eq('song_id', current.id).maybeSingle()
+      .then(({ data }) => { if (data) { setMyRating(data.rating); setMyReview(data.review || '') } })
+
+    // Average
+    supabase.from('song_ratings').select('rating').eq('song_id', current.id)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const avg = data.reduce((a, b) => a + b.rating, 0) / data.length
+          setAvgRating(avg.toFixed(1))
+          setRatingCount(data.length)
+        } else {
+          setAvgRating(null); setRatingCount(0)
+        }
+      })
+  }, [current?.id, user.id])
+
+  const saveRating = async () => {
+    if (!current || !myRating) return
+    setSavingRating(true); setRatingMsg('')
+    const { error } = await supabase.from('song_ratings').upsert({
+      user_id: user.id, song_id: current.id, rating: myRating, review: myReview
+    }, { onConflict: 'user_id,song_id' })
+    setSavingRating(false)
+    setRatingMsg(error ? 'Error al guardar.' : '¡Reseña guardada!')
+    if (!error) {
+      // Refresh avg
+      supabase.from('song_ratings').select('rating').eq('song_id', current.id)
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            const avg = data.reduce((a, b) => a + b.rating, 0) / data.length
+            setAvgRating(avg.toFixed(1)); setRatingCount(data.length)
+          }
+        })
+    }
+  }
+
+  // ── Keyboard shortcuts ───────────────────────────────────
   const showNote = useCallback((msg) => {
     setKbNote(msg)
     setTimeout(() => setKbNote(''), 1200)
@@ -107,7 +176,7 @@ export default function Player() {
     return () => window.removeEventListener('keydown', onKey)
   }, [toggle, next, prev, playing, volume, showNote])
 
-  // ── Edit handlers ─────────────────────────────────────────────
+  // ── Edit handlers ────────────────────────────────────────
   const openEdit = (song, e) => { e.stopPropagation(); setEditSong(song); setEditTitle(song.title); setEditArtist(song.artist || '') }
   const confirmEdit = async () => {
     if (!editSong) return
@@ -116,7 +185,7 @@ export default function Player() {
     setEditSong(null)
   }
 
-  // ── Playlist handler ──────────────────────────────────────────
+  // ── Playlist handler ─────────────────────────────────────
   const addToPlaylist = async (playlistId, song) => {
     await supabase.from('playlist_songs').insert({ playlist_id: playlistId, song_id: song.id })
     setPlaylistTarget(null)
@@ -189,7 +258,13 @@ export default function Player() {
                       : <span style={{ fontSize: '10px' }}>⏸</span>
                   ) : <span>{i + 1}</span>}
                 </div>
-                <div className="track-cover-placeholder">♪</div>
+                <img
+                  src={getCover(song)}
+                  className="cover-img"
+                  alt=""
+                  style={{ width: '36px', height: '36px', flexShrink: 0, borderRadius: '3px' }}
+                  onError={e => { e.target.style.display = 'none' }}
+                />
                 <div className="track-info">
                   <span className="track-title">{cleanTitle(song.title)}</span>
                   <span className="track-artist">{song.artist || 'Desconocido'}</span>
@@ -217,19 +292,25 @@ export default function Player() {
                 transition={{ duration: 0.4 }}
               >
                 <div className="player-cover-wrap">
-                  <motion.div
-                    className="player-cover-placeholder"
-                    animate={{ rotate: playing ? 360 : 0 }}
-                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-                  >♪</motion.div>
+                  <img
+                    src={getCover(current)}
+                    className="player-cover-img"
+                    alt={cleanTitle(current.title)}
+                    onError={e => { e.target.style.display = 'none' }}
+                  />
                 </div>
 
                 <div className="player-info">
                   <p className="player-current-title">{cleanTitle(current.title)}</p>
                   <p className="player-current-artist">{current.artist || 'Artista desconocido'}</p>
+                  {avgRating && (
+                    <p className="rating-avg">
+                      {'★'.repeat(Math.round(avgRating))}{'☆'.repeat(5 - Math.round(avgRating))} {avgRating} · {ratingCount} {ratingCount === 1 ? 'reseña' : 'reseñas'}
+                    </p>
+                  )}
                 </div>
 
-                {/* Styled progress bar */}
+                {/* Progress bar */}
                 <div className="player-progress-section">
                   <span className="player-time">{formatTime(progress)}</span>
                   <div className="styled-progress-track" onClick={e => {
@@ -256,6 +337,29 @@ export default function Player() {
                   <span className="player-time">🔈</span>
                   <input type="range" className="player-range" min={0} max={1} step={0.01} value={volume} onChange={e => changeVolume(parseFloat(e.target.value))} />
                   <span className="player-time">🔊</span>
+                </div>
+
+                {/* ── Rating Section ── */}
+                <div className="rating-section">
+                  <p className="rating-section-label">TU CALIFICACIÓN</p>
+                  <StarRating rating={myRating} onRate={setMyRating} />
+                  {myRating > 0 && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.25 }}>
+                      <textarea
+                        className="rating-review-input"
+                        placeholder="Tu reseña (opcional)..."
+                        maxLength={120}
+                        value={myReview}
+                        onChange={e => setMyReview(e.target.value)}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                        <button className="rating-save-btn" onClick={saveRating} disabled={savingRating}>
+                          {savingRating ? 'GUARDANDO...' : 'GUARDAR RESEÑA'}
+                        </button>
+                        {ratingMsg && <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>{ratingMsg}</span>}
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
 
                 <p className="player-keyboard-hint">Space · ←→ · M</p>

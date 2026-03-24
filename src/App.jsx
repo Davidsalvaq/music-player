@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import ParticleBackground from './components/ParticleBackground'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
@@ -8,8 +8,11 @@ import Library from './pages/Library'
 import Player from './pages/Player'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
+import UserProfile from './pages/UserProfile'
 import ProtectedRoute from './components/ProtectedRoute'
 import MiniPlayer from './components/MiniPlayer'
+import { supabase } from './lib/supabase'
+import { useAuth } from './context/AuthContext'
 
 const PAGE_LABELS = { home: 'INICIO', library: 'BIBLIOTECA', player: 'REPRODUCTOR', settings: 'AJUSTES' }
 
@@ -44,6 +47,34 @@ function NavLabel({ text, clickKey, loadDelay }) {
   )
 }
 
+function TopNav({ onSearch, setActive }) {
+  const { profile, user } = useAuth()
+  const navigate = useNavigate()
+
+  const goProfile = () => {
+    if (profile?.username) navigate(`/user/${profile.username}`)
+    else setActive('settings')
+  }
+
+  const initial = profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'
+
+  return (
+    <div className="top-nav-global">
+      <button className="top-nav-search" onClick={onSearch} title="Buscar usuarios">⌕</button>
+      {user && (
+        <button 
+          className="top-nav-profile"
+          onClick={goProfile}
+          title="Mi Perfil"
+          style={{ backgroundImage: profile?.avatar_url ? `url(${profile.avatar_url})` : 'none' }}
+        >
+          {!profile?.avatar_url && initial}
+        </button>
+      )}
+    </div>
+  )
+}
+
 function RightNav({ active, setActive }) {
   const links = ['HOME', 'LIBRARY', 'PLAYER', 'SETTINGS']
   const [clickKeys, setClickKeys] = useState({ HOME: 0, LIBRARY: 0, PLAYER: 0, SETTINGS: 0 })
@@ -70,6 +101,60 @@ function RightNav({ active, setActive }) {
         </button>
       ))}
     </motion.nav>
+  )
+}
+
+function UserSearchModal({ onClose }) {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState([])
+  const navigate = useNavigate()
+  const inputRef = useRef(null)
+
+  useEffect(() => { setTimeout(() => inputRef.current?.focus(), 100) }, [])
+
+  useEffect(() => {
+    if (!query.trim()) { setResults([]); return }
+    const timer = setTimeout(async () => {
+      const { data } = await supabase.from('profiles').select('id, username, avatar_url, bio')
+        .ilike('username', `%${query}%`).limit(8)
+      setResults(data || [])
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [query])
+
+  const go = (username) => { onClose(); navigate(`/user/${username}`) }
+
+  return (
+    <>
+      <motion.div className="modal-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
+      <motion.div className="edit-modal user-search-modal" initial={{ opacity: 0, scale: 0.92, y: -20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92 }} transition={{ duration: 0.2 }}>
+        <p className="modal-label">BUSCAR USUARIOS</p>
+        <input
+          ref={inputRef}
+          className="login-input"
+          type="text"
+          placeholder="@USERNAME"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+        />
+        <div className="search-results">
+          {results.length === 0 && query.trim() && (
+            <p style={{ opacity: 0.4, fontFamily: "'Space Grotesk', sans-serif", fontSize: '0.85rem', padding: '0.5rem 0' }}>Sin resultados.</p>
+          )}
+          {results.map(p => (
+            <button key={p.id} className="search-result-item" onClick={() => go(p.username)}>
+              <div className="search-result-avatar" style={{ backgroundImage: p.avatar_url ? `url(${p.avatar_url})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', color: p.avatar_url ? 'transparent' : 'inherit' }}>
+                {!p.avatar_url && p.username?.[0]?.toUpperCase()}
+              </div>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: '0.9rem' }}>@{p.username}</p>
+                {p.bio && <p style={{ opacity: 0.5, fontSize: '0.75rem', fontFamily: "'Space Grotesk', sans-serif" }}>{p.bio.slice(0, 50)}{p.bio.length > 50 ? '...' : ''}</p>}
+              </div>
+            </button>
+          ))}
+        </div>
+      </motion.div>
+    </>
   )
 }
 
@@ -139,11 +224,14 @@ const renderPage = (active, setActive, monospaced, setMonospaced) => {
 function Layout() {
   const [active, setActive] = useState('home')
   const [monospaced, setMonospaced] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
 
   return (
     <div className="app-shell">
       <CursorGlow />
       <ParticleBackground monospaced={monospaced} />
+
+      <TopNav onSearch={() => setShowSearch(true)} setActive={setActive} />
 
       {/* Bottom-left: page breadcrumb + credits — only on Home */}
       {active === 'home' && (
@@ -173,6 +261,10 @@ function Layout() {
       )}
 
       <RightNav active={active} setActive={setActive} />
+
+      <AnimatePresence>
+        {showSearch && <UserSearchModal onClose={() => setShowSearch(false)} />}
+      </AnimatePresence>
 
       <motion.main
         className="page-content"
@@ -204,6 +296,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/user/:username" element={<UserProfile />} />
         <Route path="/*" element={
           <ProtectedRoute>
             <Layout />

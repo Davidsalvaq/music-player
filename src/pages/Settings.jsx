@@ -100,6 +100,11 @@ export default function Settings({ monospaced, setMonospaced }) {
     await supabase.from('playlists').delete().eq('id', id)
     setPlaylists(prev => prev.filter(p => p.id !== id))
   }
+  const togglePlaylistPublic = async (pl) => {
+    const newVal = !pl.is_public
+    await supabase.from('playlists').update({ is_public: newVal }).eq('id', pl.id)
+    setPlaylists(prev => prev.map(p => p.id === pl.id ? { ...p, is_public: newVal } : p))
+  }
 
   return (
     <div className="settings-shell">
@@ -112,16 +117,7 @@ export default function Settings({ monospaced, setMonospaced }) {
         {/* ── Title ── */}
         <h1 className="settings-title">AJUSTES</h1>
 
-        {/* ── Account card ── */}
-        <div className="account-card">
-          <div className="account-avatar" style={{ backgroundImage: profile?.avatar_url ? `url(${profile.avatar_url})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', color: profile?.avatar_url ? 'transparent' : 'inherit' }}>
-            {!profile?.avatar_url && (profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U')}
-          </div>
-          <div className="account-info">
-            <p className="account-name">{(profile?.username || user?.email?.split('@')[0] || '').toUpperCase()}</p>
-            <p className="account-email">{user?.email}</p>
-          </div>
-        </div>
+        {/* ── Removed redundant Account card ── */}
 
         {/* ── Logout button (standalone) ── */}
         <button className="settings-signout-btn" onClick={handleSignOut}>
@@ -163,6 +159,9 @@ export default function Settings({ monospaced, setMonospaced }) {
         <div className="settings-section">
           <p className="settings-label">MI PERFIL</p>
           <div className="profile-edit-form" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+             <p style={{ fontSize: '0.8rem', opacity: 0.6, margin: '0 0 -0.5rem 0', fontFamily: 'monospace' }}>
+               CUENTA VINCULADA: {user?.email}
+             </p>
              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div 
                    className="account-avatar" 
@@ -234,7 +233,16 @@ export default function Settings({ monospaced, setMonospaced }) {
                     <span style={{ opacity: 0.4, marginRight: '0.5rem', fontFamily: 'monospace' }}>▶</span>
                     {pl.name}
                   </span>
-                  <button className="lib-action-btn lib-delete-btn" onClick={() => deletePlaylist(pl.id)}>✕</button>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <button
+                      className={`playlist-visibility-badge ${pl.is_public ? 'public' : 'private'}`}
+                      onClick={() => togglePlaylistPublic(pl)}
+                      title={pl.is_public ? 'Hacer privada' : 'Hacer pública'}
+                    >
+                      {pl.is_public ? '🌐 PÚBLICA' : '🔒 PRIVADA'}
+                    </button>
+                    <button className="lib-action-btn lib-delete-btn" onClick={() => deletePlaylist(pl.id)}>✕</button>
+                  </div>
                 </motion.div>
               ))}
             </div>

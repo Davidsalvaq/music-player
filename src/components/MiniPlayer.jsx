@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePlayerAll } from '../context/PlayerContext'
+import { getCover } from '../lib/covers'
 
 function cleanTitle(title) {
   if (!title) return ''
@@ -35,7 +36,15 @@ export default function MiniPlayer() {
             className="mini-player-cover-placeholder"
             animate={playing ? { boxShadow: ['0 0 0px rgba(255,255,255,0.1)', '0 0 16px rgba(255,255,255,0.3)', '0 0 0px rgba(255,255,255,0.1)'] } : {}}
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          >♪</motion.div>
+            style={{ overflow: 'hidden', padding: 0 }}
+          >
+            <img
+              src={getCover(current)}
+              alt=""
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }}
+              onError={e => { e.target.style.display = 'none' }}
+            />
+          </motion.div>
 
           <div className="mini-player-info">
             <span className="mini-player-title">{cleanTitle(current.title)}</span>
