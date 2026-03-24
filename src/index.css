@@ -29,13 +29,15 @@ button { cursor: pointer; background: none; border: none; color: inherit; font: 
 
 body {
   background-color: var(--bg);
+  background-image: radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.04), transparent 40%),
+                    radial-gradient(circle at 85% 30%, rgba(255, 255, 255, 0.04), transparent 40%);
   color: var(--text-primary);
   font-family: 'Space Grotesk', sans-serif;
   font-size: 13px;
   letter-spacing: 0.02em;
   overflow: hidden;
   transition: background-color 0.5s ease, color 0.5s ease;
-  touch-action: manipulation;
+  touch-action: pan-x pan-y;
 }
 
 /* ── Shell ───────────────────────────────────────────────────────────────────── */
@@ -256,11 +258,17 @@ body {
   border: none;
   cursor: pointer;
   text-align: left;
-  transition: opacity 0.2s;
+  transition: all 0.3s ease;
   width: fit-content;
   line-height: 1;
+  text-shadow: 0 0 15px rgba(255,255,255,0);
 }
-.login-btn:hover { opacity: 0.5; }
+.login-btn:hover { 
+  opacity: 1; 
+  transform: scale(1.05) translateX(10px);
+  text-shadow: 0 0 20px rgba(255,255,255,0.6);
+  color: #fff;
+}
 .login-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .login-error {
   font-family: 'Space Grotesk', sans-serif;
@@ -696,20 +704,27 @@ body {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  padding: 1rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  padding: 1.2rem 1rem;
+  margin-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   opacity: 0.6;
-  border-radius: 6px;
+  border-radius: 8px;
   pointer-events: all;
+  background: transparent;
 }
-.track-item:hover { opacity: 1; background: rgba(255,255,255,0.03); }
+.track-item:hover { 
+  opacity: 1; 
+  background: rgba(255,255,255,0.05); 
+  transform: translateX(5px) scale(1.01);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
 .track-item.track-active { 
   opacity: 1; 
-  background: rgba(255,255,255,0.08); 
-  border-left: 3px solid var(--text-primary);
-  padding-left: 0.5rem;
+  background: linear-gradient(90deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+  border-left: 4px solid var(--text-primary);
+  padding-left: 1rem;
 }
 
 .track-num {
@@ -2447,6 +2462,13 @@ body {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  background: rgba(10, 10, 10, 0.4);
+  padding: 0.8rem 1.5rem;
+  border-radius: 40px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 .top-nav-search {

@@ -42,17 +42,28 @@ export default function Settings({ monospaced, setMonospaced }) {
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
+
+    // Ensure we have a clean filename
     const fileExt = file.name.split('.').pop()
-    const fileName = `${user.id}-${Math.random()}.${fileExt}`
+    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
     const filePath = `${user.id}/${fileName}`
 
     setProfileMessage('Subiendo imagen...')
-    const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file)
+    // Upload with upsert just in case
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true })
     if (uploadError) { setProfileMessage('Error: ' + uploadError.message); return }
 
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath)
+    
+    // Auto save to profile so it updates immediately across the app
+    const { error: updateError } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id)
+    if (updateError) {
+      setProfileMessage('Error al guardar en perfil: ' + updateError.message)
+      return
+    }
+
     setAvatarUrl(publicUrl)
-    setProfileMessage('Imagen subida. ¡No olvides guardar!')
+    setProfileMessage('Imagen subida y guardada exitosamente.')
   }
 
   const saveProfile = async () => {
