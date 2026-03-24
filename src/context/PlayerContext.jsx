@@ -1,4 +1,4 @@
-ximport { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 
 // ── Two separate contexts ─────────────────────────────────────────────────────
 // PlayerStateContext  → songs, currentIndex, playing, volume — changes rarely
