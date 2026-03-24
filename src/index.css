@@ -35,6 +35,7 @@ body {
   letter-spacing: 0.02em;
   overflow: hidden;
   transition: background-color 0.5s ease, color 0.5s ease;
+  touch-action: manipulation;
 }
 
 /* ── Shell ───────────────────────────────────────────────────────────────────── */
@@ -2427,7 +2428,7 @@ body {
     overflow-x: hidden; 
     max-height: none; 
     height: 100%; 
-    padding: 6rem 1.5rem 8rem 1.5rem; 
+    padding: 6rem 1.5rem 12rem 1.5rem; 
   }
   .home-title {
     font-size: clamp(1.8rem, 8vw, 3rem) !important;

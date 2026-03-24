@@ -93,14 +93,14 @@ export default function Home({ setActive }) {
       {/* ── Hero ─────────────────────────────── */}
       <motion.div className="home-hero" variants={stagger} initial="hidden" animate="show">
         <motion.p variants={fadeUp} className="home-date">{today.toUpperCase()}</motion.p>
-        <motion.div variants={fadeUp} style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
+        <motion.div variants={fadeUp} style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem', minWidth: 0 }}>
           <div
             className="account-avatar"
             style={{ width: '80px', height: '80px', flexShrink: 0, fontSize: '2rem', backgroundImage: profile?.avatar_url ? `url(${profile.avatar_url})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', color: profile?.avatar_url ? 'transparent' : 'inherit' }}
           >
             {!profile?.avatar_url && (displayUsername?.[0] || 'U')}
           </div>
-          <h1 className="home-title" style={{ margin: 0, fontSize: 'clamp(2.5rem, 5vw, 4rem)', lineHeight: '1.1' }}>
+          <h1 className="home-title" style={{ margin: 0, fontSize: 'clamp(2.5rem, 5vw, 4rem)', lineHeight: '1.1', minWidth: 0, wordWrap: 'break-word', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
             HOLA,<br />{displayUsername}
           </h1>
         </motion.div>

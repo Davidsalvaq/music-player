@@ -13,6 +13,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import MiniPlayer from './components/MiniPlayer'
 import { supabase } from './lib/supabase'
 import { useAuth } from './context/AuthContext'
+import { Home as HomeIcon, Library as LibraryIcon, Play as PlayIcon, Settings as SettingsIcon } from 'lucide-react'
 
 const PAGE_LABELS = { home: 'INICIO', library: 'BIBLIOTECA', player: 'REPRODUCTOR', settings: 'AJUSTES' }
 
@@ -189,10 +190,10 @@ function CursorGlow() {
 
 function MobileNav({ active, setActive }) {
   const links = [
-    { key: 'home', icon: '⌂', label: 'INICIO' },
-    { key: 'library', icon: '♫', label: 'BIBLIOTECA' },
-    { key: 'player', icon: '▶', label: 'REPRODUCTOR' },
-    { key: 'settings', icon: '⚙', label: 'AJUSTES' }
+    { key: 'home', icon: <HomeIcon size={20} strokeWidth={2.5} />, label: 'INICIO' },
+    { key: 'library', icon: <LibraryIcon size={20} strokeWidth={2.5} />, label: 'BIBLIOTECA' },
+    { key: 'player', icon: <PlayIcon size={20} strokeWidth={2.5} />, label: 'REPRODUCTOR' },
+    { key: 'settings', icon: <SettingsIcon size={20} strokeWidth={2.5} />, label: 'AJUSTES' }
   ]
   return (
     <nav className="mobile-nav">
