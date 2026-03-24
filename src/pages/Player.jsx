@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { usePlayerAll } from '../context/PlayerContext'
 import { getCover } from '../lib/covers'
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat } from 'lucide-react'
 
 function formatTime(secs) {
   if (!secs || isNaN(secs)) return '--:--'
@@ -255,7 +256,7 @@ export default function Player() {
                   {currentIndex === i ? (
                     playing
                       ? <div className="waves-icon"><div className="wave-bar" /><div className="wave-bar" /><div className="wave-bar" /></div>
-                      : <span style={{ fontSize: '10px' }}>⏸</span>
+                      : <span style={{ display: 'flex', justifyContent: 'center' }}><Pause size={12} /></span>
                   ) : <span>{i + 1}</span>}
                 </div>
                 <img
@@ -324,13 +325,13 @@ export default function Player() {
                 </div>
 
                 <div className="player-controls">
-                  <button className="player-btn" onClick={() => setShuffle(!shuffle)} style={{ opacity: shuffle ? 1 : 0.3, fontSize: '1.3rem' }}>⇄</button>
-                  <button className="player-btn" onClick={prev}>⏮</button>
-                  <button className="player-btn-main" onClick={toggle}>
-                    {playing ? '⏸' : '▶'}
+                  <button className="player-btn" onClick={() => setShuffle(!shuffle)} style={{ opacity: shuffle ? 1 : 0.3, display: 'flex', alignItems: 'center' }}><Shuffle size={20} /></button>
+                  <button className="player-btn" onClick={prev} style={{ display: 'flex', alignItems: 'center' }}><SkipBack size={22} /></button>
+                  <button className="player-btn-main" onClick={toggle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {playing ? <Pause size={22} /> : <Play size={22} />}
                   </button>
-                  <button className="player-btn" onClick={next}>⏭</button>
-                  <button className="player-btn" onClick={() => setRepeat(!repeat)} style={{ opacity: repeat ? 1 : 0.3, fontSize: '1.3rem' }}>↺</button>
+                  <button className="player-btn" onClick={next} style={{ display: 'flex', alignItems: 'center' }}><SkipForward size={22} /></button>
+                  <button className="player-btn" onClick={() => setRepeat(!repeat)} style={{ opacity: repeat ? 1 : 0.3, display: 'flex', alignItems: 'center' }}><Repeat size={20} /></button>
                 </div>
 
                 <div className="player-volume">

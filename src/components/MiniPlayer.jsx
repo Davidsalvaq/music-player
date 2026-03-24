@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePlayerAll } from '../context/PlayerContext'
 import { getCover } from '../lib/covers'
+import { Play, Pause, SkipBack, SkipForward } from 'lucide-react'
 
 function cleanTitle(title) {
   if (!title) return ''
@@ -54,11 +55,11 @@ export default function MiniPlayer() {
           <span className="mini-track-counter">{trackNum}</span>
 
           <div className="mini-player-controls">
-            <button className="player-btn" onClick={prev}>⏮</button>
+            <button className="player-btn" onClick={prev}><SkipBack size={22} /></button>
             <button className="player-btn-main" onClick={toggle} style={{ fontSize: '1.4rem', width: '44px', height: '44px' }}>
-              {playing ? '⏸' : '▶'}
+              {playing ? <Pause size={22} /> : <Play size={22} />}
             </button>
-            <button className="player-btn" onClick={next}>⏭</button>
+            <button className="player-btn" onClick={next}><SkipForward size={22} /></button>
           </div>
         </motion.div>
       )}

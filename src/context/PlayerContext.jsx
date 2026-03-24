@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
+ximport { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 
 // ── Two separate contexts ─────────────────────────────────────────────────────
 // PlayerStateContext  → songs, currentIndex, playing, volume — changes rarely
@@ -7,16 +7,16 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback } f
 // Components subscribe only to what they need, so progress ticks don't
 // re-render Home, Library, Settings, or the track list.
 
-const PlayerStateContext    = createContext({})
+const PlayerStateContext = createContext({})
 const PlayerProgressContext = createContext({ progress: 0, duration: 0 })
 
 export function PlayerProvider({ children }) {
-  const [songs, setSongs]               = useState([])
+  const [songs, setSongs] = useState([])
   const [currentIndex, setCurrentIndex] = useState(null)
-  const [playing, setPlaying]           = useState(false)
-  const [volume, setVolume]             = useState(0.8)
-  const [progress, setProgress]         = useState(0)
-  const [duration, setDuration]         = useState(0)
+  const [playing, setPlaying] = useState(false)
+  const [volume, setVolume] = useState(0.8)
+  const [progress, setProgress] = useState(0)
+  const [duration, setDuration] = useState(0)
 
   const audioRef = useRef(new Audio())
 
@@ -26,7 +26,7 @@ export function PlayerProvider({ children }) {
     const audio = audioRef.current
     audio.src = songs[currentIndex]?.file_url ?? ''
     audio.volume = volume
-    audio.play().catch(() => {})
+    audio.play().catch(() => { })
     setPlaying(true)
     setProgress(0)
   }, [currentIndex]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -37,25 +37,25 @@ export function PlayerProvider({ children }) {
 
     const updateProgress = () => setProgress(audio.currentTime)
     const updateDuration = () => setDuration(audio.duration)
-    const onEnded        = () => setCurrentIndex(i => (i + 1) % songs.length)
+    const onEnded = () => setCurrentIndex(i => (i + 1) % songs.length)
 
-    audio.addEventListener('timeupdate',     updateProgress)
+    audio.addEventListener('timeupdate', updateProgress)
     audio.addEventListener('loadedmetadata', updateDuration)
-    audio.addEventListener('ended',          onEnded)
+    audio.addEventListener('ended', onEnded)
 
     return () => {
-      audio.removeEventListener('timeupdate',     updateProgress)
+      audio.removeEventListener('timeupdate', updateProgress)
       audio.removeEventListener('loadedmetadata', updateDuration)
-      audio.removeEventListener('ended',          onEnded)
+      audio.removeEventListener('ended', onEnded)
     }
   }, [currentIndex, songs.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Controls ───────────────────────────────────────────────────────────────
-  const play   = useCallback(() => { audioRef.current.play().catch(() => {}); setPlaying(true)  }, [])
-  const pause  = useCallback(() => { audioRef.current.pause(); setPlaying(false) }, [])
+  const play = useCallback(() => { audioRef.current.play().catch(() => { }); setPlaying(true) }, [])
+  const pause = useCallback(() => { audioRef.current.pause(); setPlaying(false) }, [])
   const toggle = useCallback(() => { playing ? pause() : play() }, [playing, play, pause])
-  const next   = useCallback(() => setCurrentIndex(i => (i + 1) % songs.length), [songs.length])
-  const prev   = useCallback(() => setCurrentIndex(i => (i - 1 + songs.length) % songs.length), [songs.length])
+  const next = useCallback(() => setCurrentIndex(i => (i + 1) % songs.length), [songs.length])
+  const prev = useCallback(() => setCurrentIndex(i => (i - 1 + songs.length) % songs.length), [songs.length])
 
   const seek = useCallback((val) => {
     audioRef.current.currentTime = val
@@ -100,9 +100,9 @@ export function PlayerProvider({ children }) {
 // usePlayerAll()      → everything — use only in components that need both
 //                        (Player panel, MiniPlayer)
 
-export const usePlayer        = () => useContext(PlayerStateContext)
+export const usePlayer = () => useContext(PlayerStateContext)
 export const usePlayerProgress = () => useContext(PlayerProgressContext)
-export const usePlayerAll     = () => ({
+export const usePlayerAll = () => ({
   ...useContext(PlayerStateContext),
   ...useContext(PlayerProgressContext),
 })

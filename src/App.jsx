@@ -52,8 +52,7 @@ function TopNav({ onSearch, setActive }) {
   const navigate = useNavigate()
 
   const goProfile = () => {
-    if (profile?.username) navigate(`/user/${profile.username}`)
-    else setActive('settings')
+    setActive('settings')
   }
 
   const initial = profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'
