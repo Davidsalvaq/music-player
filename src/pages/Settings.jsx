@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import { getCover } from '../lib/covers'
 
 const THEME_COLORS = { dark: '#0a0a0a', light: '#efefef', blue: '#4801ff' }
 const THEME_LABELS = { dark: '◉ DARK', light: '◉ LIGHT', blue: '◉ BLUE' }
@@ -14,6 +15,7 @@ export default function Settings({ monospaced, setMonospaced }) {
   const navigate = useNavigate()
 
   const [playlists, setPlaylists] = useState([])
+  const [myRatings, setMyRatings] = useState([])
   const [newPlaylistName, setNewPlaylistName] = useState('')
   const [creating, setCreating] = useState(false)
   const [playlistError, setPlaylistError] = useState('')
@@ -37,7 +39,17 @@ export default function Settings({ monospaced, setMonospaced }) {
     const { data } = await supabase.from('playlists').select('*').eq('user_id', user.id).order('created_at', { ascending: true })
     setPlaylists(data || [])
   }
-  useEffect(() => { fetchPlaylists() }, [user.id])
+  const fetchMyRatings = async () => {
+    if (!user) return
+    const { data } = await supabase
+      .from('song_ratings')
+      .select('*, songs(id, title, artist, cover_url)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(12)
+    setMyRatings(data || [])
+  }
+  useEffect(() => { fetchPlaylists(); fetchMyRatings() }, [user.id])
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0]
@@ -205,6 +217,36 @@ export default function Settings({ monospaced, setMonospaced }) {
         </div>
 
         <hr className="settings-divider" />
+
+        {/* ── Mis Reseñas ── */}
+        {myRatings.length > 0 && (
+          <>
+            <div className="settings-section">
+              <p className="settings-label">MIS RESEÑAS — {myRatings.length}</p>
+              <div className="profile-ratings-grid">
+                {myRatings.map(r => (
+                  <motion.div
+                    key={r.id}
+                    className="rating-card"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                      '--cover': r.songs?.cover_url ? `url(${r.songs.cover_url})` : `url(${getCover(r.songs)})`
+                    }}
+                  >
+                    <div className="rating-card-bg" />
+                    <div className="rating-card-content">
+                      <p className="rating-card-stars">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</p>
+                      <p className="rating-card-title">{r.songs?.title || 'Sin Título'}</p>
+                      {r.review && <p className="rating-card-review">"{r.review}"</p>}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+            <hr className="settings-divider" />
+          </>
+        )}
 
         {/* ── Playlists ── */}
         <div className="settings-section">

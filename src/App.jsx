@@ -285,7 +285,7 @@ function Layout() {
         </AnimatePresence>
       </motion.main>
 
-      {active !== 'player' && <MiniPlayer />}
+      {active !== 'player' && <MiniPlayer setActive={setActive} />}
       <MobileNav active={active} setActive={setActive} />
     </div>
   )

@@ -185,9 +185,8 @@ export default function UserProfile() {
                 >
                   <div className="rating-card-bg" />
                   <div className="rating-card-content">
-                    <p className="rating-card-title">{cleanTitle(r.songs?.title)}</p>
-                    <p className="rating-card-artist">{r.songs?.artist || 'Artista desconocido'}</p>
                     <p className="rating-card-stars">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</p>
+                    <p className="rating-card-title">{r.songs?.title || 'Sin Título'}</p>
                     {r.review && <p className="rating-card-review">"{r.review}"</p>}
                   </div>
                 </motion.div>

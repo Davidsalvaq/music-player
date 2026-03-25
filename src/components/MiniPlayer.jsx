@@ -9,7 +9,7 @@ function cleanTitle(title) {
   return title.replace(/\(MP3[^)]*\)/gi, '').replace(/_+/g, ' ').trim()
 }
 
-export default function MiniPlayer() {
+export default function MiniPlayer({ setActive }) {
   const { current, playing, progress, duration, volume, changeVolume, seek, toggle, next, prev, songs, currentIndex, formatTime } = usePlayerAll()
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -21,7 +21,7 @@ export default function MiniPlayer() {
       {current && (
         <motion.div
           className="mini-player"
-          onClick={() => setIsExpanded(true)}
+          onClick={() => { if (setActive) setActive('player') }}
           style={{ cursor: 'pointer' }}
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -61,7 +61,7 @@ export default function MiniPlayer() {
           <div className="mini-player-controls">
             <button className="player-btn" onClick={(e) => { e.stopPropagation(); prev(); }} style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><SkipBack size={22} /></button>
             <button className="player-btn-main" onClick={(e) => { e.stopPropagation(); toggle(); }} style={{ fontSize: '1.4rem', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {playing ? <Pause size={22} /> : <Play size={22} />}
+              {playing ? <Pause className="invert-icon" size={22} /> : <Play className="invert-icon" size={22} />}
             </button>
             <button className="player-btn" onClick={(e) => { e.stopPropagation(); next(); }} style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><SkipForward size={22} /></button>
           </div>

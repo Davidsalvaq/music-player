@@ -328,7 +328,7 @@ export default function Player() {
                   <button className="player-btn" onClick={() => setShuffle(!shuffle)} style={{ opacity: shuffle ? 1 : 0.3, display: 'flex', alignItems: 'center' }}><Shuffle size={20} /></button>
                   <button className="player-btn" onClick={prev} style={{ display: 'flex', alignItems: 'center' }}><SkipBack size={22} /></button>
                   <button className="player-btn-main" onClick={toggle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {playing ? <Pause size={22} /> : <Play size={22} />}
+                    {playing ? <Pause className="invert-icon" size={22} /> : <Play className="invert-icon" size={22} />}
                   </button>
                   <button className="player-btn" onClick={next} style={{ display: 'flex', alignItems: 'center' }}><SkipForward size={22} /></button>
                   <button className="player-btn" onClick={() => setRepeat(!repeat)} style={{ opacity: repeat ? 1 : 0.3, display: 'flex', alignItems: 'center' }}><Repeat size={20} /></button>
