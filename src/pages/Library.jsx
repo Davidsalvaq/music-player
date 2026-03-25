@@ -13,7 +13,13 @@ function cleanTitle(title) {
 async function readTags(file) {
   try {
     const id3 = await import('id3js')
-    const tags = await id3.fromFile(file)
+    
+    // Fallback timeout in case file is virtual/cloud and hangs reader
+    const parsePromise = id3.fromFile(file)
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout parsing ID3')), 3000))
+    
+    const tags = await Promise.race([parsePromise, timeoutPromise])
+    
     let coverUrl = null
     if (tags?.images?.length > 0) {
       const img = tags.images[0]
@@ -21,7 +27,8 @@ async function readTags(file) {
       coverUrl = URL.createObjectURL(blob)
     }
     return { title: tags?.title || '', artist: tags?.artist || '', coverUrl }
-  } catch {
+  } catch (err) {
+    console.warn("Error leyendo metadatos:", err)
     return { title: '', artist: '', coverUrl: null }
   }
 }
@@ -247,8 +254,8 @@ export default function Library() {
             }}
           >
             {songs.length === 0 ? (
-              <label className="file-label-big" style={{ opacity: 0.8 }}>
-                <input type="file" accept=".mp3,audio/*" multiple style={{ display: 'none' }} onChange={handleFiles} />
+              <label className="file-label-big" style={{ opacity: 0.8, cursor: 'pointer' }}>
+                <input type="file" accept="audio/*, .mp3, .wav, .m4a, .aac, .ogg, .flac" multiple style={{ display: 'none' }} onChange={handleFiles} />
                 {isDragging ? 'SUELTA AQUÍ' : '+ SELECCIONAR ARCHIVOS'}
               </label>
             ) : (

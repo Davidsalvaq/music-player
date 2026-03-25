@@ -186,13 +186,13 @@ export default function Settings({ monospaced, setMonospaced }) {
                CUENTA VINCULADA: {user?.email}
              </p>
              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div 
+                <label 
+                   htmlFor="avatar-upload"
                    className="account-avatar" 
-                   style={{ width: '60px', height: '60px', flexShrink: 0, cursor: 'pointer', backgroundImage: avatarUrl ? `url(${avatarUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', color: avatarUrl ? 'transparent' : 'inherit' }}
-                   onClick={() => document.getElementById('avatar-upload').click()}
+                   style={{ width: '60px', height: '60px', flexShrink: 0, cursor: 'pointer', backgroundImage: avatarUrl ? `url(${avatarUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', color: avatarUrl ? 'transparent' : 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                    {!avatarUrl && (editUsername?.[0]?.toUpperCase() || 'U')}
-                </div>
+                </label>
                 <input type="file" id="avatar-upload" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarUpload} />
                 <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>CLICK EN EL CÍRCULO PARA CAMBIAR FOTO</span>
              </div>
