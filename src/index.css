@@ -2618,18 +2618,25 @@ body {
   .player-shell {
     position: relative;
     top: auto; left: auto; right: auto; bottom: auto;
-    flex-direction: column;
+    flex-direction: column-reverse;
     height: auto;
     min-height: calc(100dvh - 4.5rem);
     overflow: visible;
-    justify-content: center;
+    justify-content: flex-end;
   }
   .player-tracklist {
-    display: none !important;
+    display: block !important;
+    width: 100%;
+    border-right: none;
+    padding: 1rem 1.4rem 6rem; /* extra padding for mobile nav */
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
   }
   .player-panel {
     border-top: none;
-    padding-bottom: 6rem; /* extra padding to account for the mobile nav */
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 2rem;
   }
 }
 
