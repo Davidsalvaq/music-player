@@ -193,7 +193,7 @@ export default function Settings({ monospaced, setMonospaced }) {
                 >
                    {!avatarUrl && (editUsername?.[0]?.toUpperCase() || 'U')}
                 </label>
-                <input type="file" id="avatar-upload" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarUpload} />
+                <input type="file" id="avatar-upload" accept="image/*" className="hidden-file-input" onChange={handleAvatarUpload} />
                 <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>CLICK EN EL CÍRCULO PARA CAMBIAR FOTO</span>
              </div>
              

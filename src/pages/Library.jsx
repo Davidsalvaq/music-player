@@ -86,7 +86,20 @@ export default function Library() {
     setIsDragging(false)
     const filesList = e.dataTransfer ? e.dataTransfer.files : e.target.files
     if (!filesList || filesList.length === 0) return
-    const files = Array.from(filesList).slice(0, 10)
+    
+    // JS-side validation instead of HTML 'accept' attribute (which breaks iOS)
+    const validFiles = Array.from(filesList).filter(f => {
+      const isAudio = f.type.startsWith('audio/') || f.type.startsWith('video/')
+      const hasExt = f.name.match(/\.(mp3|wav|m4a|aac|ogg|flac|mpe?g)$/i)
+      return isAudio || hasExt
+    })
+    
+    if (validFiles.length === 0) {
+      setUploadError('Formato no válido. Selecciona archivos de música.')
+      return
+    }
+
+    const files = validFiles.slice(0, 10)
     setUploadError('')
     setSuccess(false)
     setProgress(0)
@@ -254,8 +267,8 @@ export default function Library() {
             }}
           >
             {songs.length === 0 ? (
-              <label className="file-label-big" style={{ opacity: 0.8, cursor: 'pointer' }}>
-                <input type="file" accept="audio/*, .mp3, .wav, .m4a, .aac, .ogg, .flac" multiple style={{ display: 'none' }} onChange={handleFiles} />
+              <label className="file-label-big" style={{ opacity: 0.8, cursor: 'pointer', position: 'relative' }}>
+                <input type="file" className="hidden-file-input" multiple onChange={handleFiles} />
                 {isDragging ? 'SUELTA AQUÍ' : '+ SELECCIONAR ARCHIVOS'}
               </label>
             ) : (
